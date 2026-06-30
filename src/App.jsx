@@ -7,11 +7,11 @@ const SUPABASE_URL = "https://cztiubjkhjyolqtettjs.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dGl1YmpraGp5b2xxdGV0dGpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4Mjg2OTMsImV4cCI6MjA5ODQwNDY5M30.-AjL3RU3HzAKACzyBF-MftEGA7mavFjqa1KdhmrhquE";
 
 async function supaFetch(path, options = {}) {
-  const res = await fetch(${SUPABASE_URL}/rest/v1/${path}, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...options,
     headers: {
       "apikey": SUPABASE_ANON_KEY,
-      "Authorization": Bearer ${SUPABASE_ANON_KEY},
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
       "Content-Type": "application/json",
       "Prefer": options.prefer || "return=representation",
       ...options.headers,
@@ -19,7 +19,7 @@ async function supaFetch(path, options = {}) {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(Supabase error ${res.status}: ${text});
+    throw new Error(`Supabase error ${res.status}: ${text}`);
   }
   const text = await res.text();
   return text ? JSON.parse(text) : null;
@@ -107,7 +107,7 @@ function BannerBadge({ type }) {
   const s = BANNER_STYLES[type] || BANNER_STYLES.Autre;
   return (
     <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, fontWeight: 600,
-      background: s.bg, color: s.color, border: 1px solid ${s.border}, whiteSpace: "nowrap" }}>
+      background: s.bg, color: s.color, border: `1px solid ${s.border}`, whiteSpace: "nowrap" }}>
       {type}
     </span>
   );
@@ -122,7 +122,7 @@ function FreqBadge({ freq }) {
   const s = FREQ_STYLES[freq] || FREQ_STYLES[7];
   return (
     <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, fontWeight: 500, whiteSpace: "nowrap",
-      background: s.bg, color: s.color, border: 1px solid ${s.border} }}>
+      background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
       {s.label}
     </span>
   );
@@ -133,7 +133,7 @@ function EmployeBadge({ name, employees }) {
   const c = employeeColor(name, employees);
   return (
     <span style={{ fontSize: 11, padding: "2px 10px", borderRadius: 999, fontWeight: 600,
-      background: c.bg, color: c.color, border: 1px solid ${c.border}, whiteSpace: "nowrap" }}>
+      background: c.bg, color: c.color, border: `1px solid ${c.border}`, whiteSpace: "nowrap" }}>
       {name}
     </span>
   );
@@ -143,7 +143,7 @@ function StockBar({ stock }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 100 }}>
       <div style={{ flex: 1, height: 6, borderRadius: 3, background: "#F1F5F9", overflow: "hidden" }}>
-        <div style={{ width: ${stock}%, height: "100%", borderRadius: 3, background: barColor(stock), transition: "width 0.4s ease" }} />
+        <div style={{ width: `${stock}%`, height: "100%", borderRadius: 3, background: barColor(stock), transition: "width 0.4s ease" }} />
       </div>
       <span style={{ fontSize: 12, minWidth: 32, textAlign: "right", color: "#64748B", fontVariantNumeric: "tabular-nums" }}>
         {stock}%
@@ -156,7 +156,7 @@ function StatusChip({ p }) {
   const j = joursDepuis(p.visite);
   const status = getStatus(p);
   if (status === "urgent") {
-    const label = j >= p.freq ? +${j - p.freq}j retard : "Stock critique";
+    const label = j >= p.freq ? `+${j - p.freq}j retard` : "Stock critique";
     return <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, fontWeight: 600,
       background: "#FEF2F2", color: "#991B1B", border: "1px solid #FECACA" }}>{label}</span>;
   }
@@ -169,7 +169,7 @@ function IconBtn({ onClick, title, color, bg, children, disabled }) {
   return (
     <button onClick={onClick} title={title} disabled={disabled}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-      style={{ width: 30, height: 30, borderRadius: 8, border: 1px solid ${hover ? color || "#CBD5E1" : "#E2E8F0"},
+      style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${hover ? color || "#CBD5E1" : "#E2E8F0"}`,
         background: hover ? (bg || "#F8FAFC") : "transparent", color: hover ? (color || "#334155") : "#94A3B8",
         cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.4 : 1,
         display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -237,7 +237,7 @@ function PDVCard({ p, employees, onSuivi, onEdit, onDelete, onForce, busy, dateL
 
       <div style={{ display: "flex", gap: 6 }}>
         <button onClick={() => onForce(p.id, !p.force_urgent)} disabled={busy} style={{ flex: 1, fontSize: 12, padding: "8px 6px", borderRadius: 8,
-          border: 1px solid ${p.force_urgent ? "#9A3412" : "#FED7AA"}, background: p.force_urgent ? "#9A3412" : "#FFF7ED",
+          border: `1px solid ${p.force_urgent ? "#9A3412" : "#FED7AA"}`, background: p.force_urgent ? "#9A3412" : "#FFF7ED",
           color: p.force_urgent ? "#fff" : "#9A3412", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer" }}>📌</button>
         <button onClick={() => onSuivi(p.id)} disabled={busy} style={{ flex: 2, fontSize: 12, padding: "8px 6px", borderRadius: 8,
           border: "1px solid #1D4ED8", background: "#EFF6FF", color: "#1D4ED8", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer" }}>✓ Visité</button>
@@ -287,10 +287,10 @@ function PDVRow({ p, employees, onSuivi, onEdit, onDelete, onForce, busy }) {
 function dateLabelFor(p, mode) {
   if (mode === "urgent") {
     const j = joursDepuis(p.visite);
-    return p.force_urgent ? "Forcé manuellement" : (j >= p.freq ? +${j - p.freq}j de retard : "Stock critique");
+    return p.force_urgent ? "Forcé manuellement" : (j >= p.freq ? `+${j - p.freq}j de retard` : "Stock critique");
   }
-  if (mode === "soon") return Dans ${joursAvant(p)}j;
-  return Prochaine visite: ${prochaineVisite(p)};
+  if (mode === "soon") return `Dans ${joursAvant(p)}j`;
+  return `Prochaine visite: ${prochaineVisite(p)}`;
 }
 
 function Table({ pdvList, label, employees, onSuivi, onEdit, onDelete, onForce, busy, mode }) {
@@ -348,7 +348,7 @@ function VisitConfirmModal({ open, onClose, onConfirm, employees, pdvName }) {
 
   function handleSelectChange(e) {
     const val = e.target.value;
-    if (val === "_other_") { setShowCustom(true); setSelected(""); }
+    if (val === "__other__") { setShowCustom(true); setSelected(""); }
     else { setShowCustom(false); setSelected(val); }
   }
 
@@ -363,10 +363,10 @@ function VisitConfirmModal({ open, onClose, onConfirm, employees, pdvName }) {
         <h2 style={{ fontSize: 15, fontWeight: 600, color: "#0F172A", marginBottom: 4 }}>Qui a fait la visite ?</h2>
         <p style={{ fontSize: 12, color: "#64748B", marginBottom: "1rem" }}>{pdvName}</p>
 
-        <select value={showCustom ? "_other_" : selected} onChange={handleSelectChange} style={{ ...inputStyle, marginBottom: 10 }}>
+        <select value={showCustom ? "__other__" : selected} onChange={handleSelectChange} style={{ ...inputStyle, marginBottom: 10 }}>
           <option value="">— Choisir —</option>
           {employees.map(e => <option key={e} value={e}>{e}</option>)}
-          <option value="_other_">Autre...</option>
+          <option value="__other__">Autre...</option>
         </select>
 
         {showCustom && (
@@ -413,7 +413,7 @@ function EmployeesModal({ open, onClose, employees, onSave }) {
             return (
               <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "7px 10px", borderRadius: 8, marginBottom: 6,
-                background: c.bg, border: 1px solid ${c.border} }}>
+                background: c.bg, border: `1px solid ${c.border}` }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: c.color }}>{e}</span>
                 <button onClick={() => setList(list.filter((_, j) => j !== i))}
                   style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: 16, lineHeight: 1 }}>✕</button>
@@ -477,7 +477,7 @@ function Modal({ open, onClose, onSave, initial, employees }) {
 
   const FreqToggle = ({ label, active, onClick }) => (
     <button onClick={onClick} style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 13, cursor: "pointer",
-      border: 1px solid ${active ? "#3B82F6" : "#E2E8F0"},
+      border: `1px solid ${active ? "#3B82F6" : "#E2E8F0"}`,
       background: active ? "#EFF6FF" : "#FAFBFC",
       color: active ? "#1D4ED8" : "#64748B", fontWeight: active ? 600 : 400, transition: "all 0.15s" }}>
       {label}
@@ -514,7 +514,7 @@ function Modal({ open, onClose, onSave, initial, employees }) {
           </div></div>
         <div style={{ marginBottom: 12 }}>
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "8px 10px",
-            borderRadius: 8, border: 1px solid ${backstock ? "#7C3AED" : "#E2E8F0"},
+            borderRadius: 8, border: `1px solid ${backstock ? "#7C3AED" : "#E2E8F0"}`,
             background: backstock ? "#F5F3FF" : "#FAFBFC" }}>
             <input type="checkbox" checked={backstock} onChange={e => setBackstock(e.target.checked)}
               style={{ width: 16, height: 16, accentColor: "#7C3AED", cursor: "pointer" }} />
@@ -569,7 +569,7 @@ export default function App() {
       await supaFetch("pdvs", { method: "POST", body: JSON.stringify(SEED_PDVS), prefer: "return=minimal" });
       await supaFetch("employees", { method: "POST", body: JSON.stringify(SEED_EMPLOYEES.map(nom => ({ nom }))), prefer: "return=minimal" });
     } catch (err) {
-      showToast(Erreur d'initialisation: ${err.message});
+      showToast(`Erreur d'initialisation: ${err.message}`);
     }
     setSeeding(false);
   }, [showToast]);
@@ -589,11 +589,11 @@ export default function App() {
         ]);
         setPdvs(pdvData2 || []);
         setEmployees((empData2 || []).map(e => e.nom));
-        setConnStatus(Connecté ✓ — ${(pdvData2 || []).length} PDV initialisés);
+        setConnStatus(`Connecté ✓ — ${(pdvData2 || []).length} PDV initialisés`);
       } else {
         setPdvs(pdvData || []);
         setEmployees((empData || []).map(e => e.nom));
-        setConnStatus(Connecté ✓ — ${(pdvData || []).length} PDV);
+        setConnStatus(`Connecté ✓ — ${(pdvData || []).length} PDV`);
       }
     } catch (err) {
       setConnError(err.message);
@@ -634,37 +634,37 @@ export default function App() {
     if (!visitTarget) return;
     setBusy(true);
     try {
-      await supaFetch(pdvs?id=eq.${visitTarget.id}, {
+      await supaFetch(`pdvs?id=eq.${visitTarget.id}`, {
         method: "PATCH",
         body: JSON.stringify({ visite: todayStr(), stock: 100, force_urgent: false, dernier_visiteur: employeName }),
       });
-      showToast(✓ ${visitTarget.nom} — visité par ${employeName});
+      showToast(`✓ ${visitTarget.nom} — visité par ${employeName}`);
       setVisitTarget(null);
       await loadAll();
-    } catch (err) { showToast(Erreur: ${err.message}); }
+    } catch (err) { showToast(`Erreur: ${err.message}`); }
     setBusy(false);
   }
 
   async function handleForce(id, value) {
     setBusy(true);
     try {
-      await supaFetch(pdvs?id=eq.${id}, { method: "PATCH", body: JSON.stringify({ force_urgent: value }) });
+      await supaFetch(`pdvs?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ force_urgent: value }) });
       const p = pdvs.find(x => x.id === id);
-      showToast(value ?📌 ${p?.nom} forcé dans "À visiter maintenant"` :📌 Forçage retiré sur ${p?.nom}`);
+      showToast(value ? `📌 ${p?.nom} forcé dans "À visiter maintenant"` : `📌 Forçage retiré sur ${p?.nom}`);
       await loadAll();
-    } catch (err) { showToast(Erreur: ${err.message}); }
+    } catch (err) { showToast(`Erreur: ${err.message}`); }
     setBusy(false);
   }
 
   async function handleDelete(id) {
     const p = pdvs.find(x => x.id === id);
-    if (!p || !window.confirm(Supprimer "${p.nom}" ?)) return;
+    if (!p || !window.confirm(`Supprimer "${p.nom}" ?`)) return;
     setBusy(true);
     try {
-      await supaFetch(pdvs?id=eq.${id}, { method: "DELETE" });
+      await supaFetch(`pdvs?id=eq.${id}`, { method: "DELETE" });
       showToast("PDV supprimé");
       await loadAll();
-    } catch (err) { showToast(Erreur: ${err.message}); }
+    } catch (err) { showToast(`Erreur: ${err.message}`); }
     setBusy(false);
   }
 
@@ -675,7 +675,7 @@ export default function App() {
     setBusy(true);
     try {
       if (editTarget) {
-        await supaFetch(pdvs?id=eq.${editTarget.id}, { method: "PATCH", body: JSON.stringify(data) });
+        await supaFetch(`pdvs?id=eq.${editTarget.id}`, { method: "PATCH", body: JSON.stringify(data) });
         showToast("PDV mis à jour ✓");
       } else {
         await supaFetch("pdvs", { method: "POST", body: JSON.stringify(data) });
@@ -683,7 +683,7 @@ export default function App() {
       }
       setModalOpen(false); setEditTarget(null);
       await loadAll();
-    } catch (err) { showToast(Erreur: ${err.message}); }
+    } catch (err) { showToast(`Erreur: ${err.message}`); }
     setBusy(false);
   }
 
@@ -696,12 +696,12 @@ export default function App() {
         await supaFetch("employees", { method: "POST", body: JSON.stringify({ nom }) });
       }
       for (const nom of toRemove) {
-        await supaFetch(employees?nom=eq.${encodeURIComponent(nom)}, { method: "DELETE" });
+        await supaFetch(`employees?nom=eq.${encodeURIComponent(nom)}`, { method: "DELETE" });
       }
       setEmpModalOpen(false);
       showToast("Employés mis à jour ✓");
       await loadAll();
-    } catch (err) { showToast(Erreur: ${err.message}); }
+    } catch (err) { showToast(`Erreur: ${err.message}`); }
     setBusy(false);
   }
 
@@ -709,7 +709,7 @@ export default function App() {
     if (!pdvs.length) return alert("Aucun PDV.");
     const headers = ["Nom","Ville","Bannière","Responsable","Fréquence (jours)","Stock estimé (%)","Backstock","Dernière visite","Prochaine visite","Statut"];
     const sl = { urgent: "À visiter", soon: "Bientôt vide", ok: "OK" };
-    const rows = pdvs.map(p => [`"${p.nom}","${p.ville}","${p.type}","${p.employe||""}"`,p.freq,calcStock(p),p.backstock?"Oui":"Non",p.visite,prochaineVisite(p),sl[getStatus(p)]].join(","));
+    const rows = pdvs.map(p => [`"${p.nom}"`,`"${p.ville}"`,`"${p.type}"`,`"${p.employe||""}"`,p.freq,calcStock(p),p.backstock?"Oui":"Non",p.visite,prochaineVisite(p),sl[getStatus(p)]].join(","));
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
     const url = URL.createObjectURL(blob);
