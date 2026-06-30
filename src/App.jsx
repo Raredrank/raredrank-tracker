@@ -65,10 +65,15 @@ function prochaineVisite(p) {
   r.setDate(r.getDate() + p.freq);
   return r.toLocaleDateString("fr-CA", { day: "numeric", month: "short" });
 }
-function getStatus(p) {
+function calcStock(p) {
   const j = joursDepuis(p.visite);
-  if (p.stock <= 20 || j >= p.freq) return "urgent";
-  if (j >= p.freq - 3 || p.stock <= 40) return "soon";
+  const pct = 100 - (j / p.freq) * 100;
+  return Math.max(0, Math.min(100, Math.round(pct)));
+}
+function getStatus(p) {
+  const stock = calcStock(p);
+  if (stock <= 20) return "urgent";
+  if (stock <= 40) return "soon";
   return "ok";
 }
 function barColor(s) {
@@ -107,13 +112,17 @@ function BannerBadge({ type }) {
   );
 }
 
+const FREQ_STYLES = {
+  7:  { bg: "#EFF6FF", color: "#1D4ED8", border: "#BFDBFE", label: "/ semaine" },
+  14: { bg: "#F5F3FF", color: "#5B21B6", border: "#DDD6FE", label: "/ 2 semaines" },
+  30: { bg: "#FFF7ED", color: "#9A3412", border: "#FED7AA", label: "/ mois" },
+};
 function FreqBadge({ freq }) {
+  const s = FREQ_STYLES[freq] || FREQ_STYLES[7];
   return (
     <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, fontWeight: 500, whiteSpace: "nowrap",
-      background: freq === 7 ? "#EFF6FF" : "#F5F3FF",
-      color: freq === 7 ? "#1D4ED8" : "#5B21B6",
-      border: freq === 7 ? "1px solid #BFDBFE" : "1px solid #DDD6FE" }}>
-      {freq === 7 ? "/ semaine" : "/ 2 semaines"}
+      background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
+      {s.label}
     </span>
   );
 }
@@ -194,13 +203,16 @@ function PDVRow({ p, employees, onSuivi, onEdit, onDelete, busy }) {
     <tr onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{ background: hover ? "#FAFBFC" : "transparent", transition: "background 0.12s" }}>
       <td style={{ padding: "9px 10px", fontWeight: 500, fontSize: 13, color: "#0F172A", maxWidth: 200 }}>
-        <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nom}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nom}</span>
+          {p.backstock && <span title="Stock disponible en back-store" style={{ fontSize: 12, flexShrink: 0 }}>📦</span>}
+        </span>
       </td>
       <td style={{ padding: "9px 10px", fontSize: 12, color: "#64748B", whiteSpace: "nowrap" }}>{p.ville}</td>
       <td style={{ padding: "9px 10px" }}><BannerBadge type={p.type} /></td>
       <td style={{ padding: "9px 10px" }}><FreqBadge freq={p.freq} /></td>
       <td style={{ padding: "9px 10px" }}><EmployeBadge name={p.employe} employees={employees} /></td>
-      <td style={{ padding: "9px 10px", minWidth: 110 }}><StockBar stock={p.stock} /></td>
+      <td style={{ padding: "9px 10px", minWidth: 110 }}><StockBar stock={calcStock(p)} /></td>
       <td style={{ padding: "9px 10px" }}><StatusChip p={p} /></td>
       <td style={{ padding: "9px 10px" }}>
         <div style={{ display: "flex", gap: 4 }}>
@@ -299,7 +311,7 @@ function Modal({ open, onClose, onSave, initial, employees }) {
   const [ville, setVille] = useState("");
   const [type, setType] = useState("IGA");
   const [freq, setFreq] = useState(7);
-  const [stock, setStock] = useState(50);
+  const [backstock, setBackstock] = useState(false);
   const [visite, setVisite] = useState(todayStr());
   const [employe, setEmploye] = useState("");
 
@@ -309,7 +321,7 @@ function Modal({ open, onClose, onSave, initial, employees }) {
       setVille(initial?.ville || "");
       setType(initial?.type || "IGA");
       setFreq(initial?.freq || 7);
-      setStock(initial?.stock ?? 50);
+      setBackstock(initial?.backstock || false);
       setVisite(initial?.visite || todayStr());
       setEmploye(initial?.employe || "");
     }
@@ -356,10 +368,19 @@ function Modal({ open, onClose, onSave, initial, employees }) {
           <div style={{ display: "flex", gap: 8 }}>
             <FreqToggle active={freq === 7} label="Chaque semaine" onClick={() => setFreq(7)} />
             <FreqToggle active={freq === 14} label="Aux 2 semaines" onClick={() => setFreq(14)} />
+            <FreqToggle active={freq === 30} label="Mensuelle" onClick={() => setFreq(30)} />
           </div></div>
-        <div style={{ marginBottom: 12 }}><label style={labelStyle}>Stock actuel (%)</label>
-          <input type="number" min={0} max={100} value={stock}
-            onChange={e => setStock(Math.min(100, Math.max(0, Number(e.target.value))))} style={inputStyle} /></div>
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "8px 10px",
+            borderRadius: 8, border: `1px solid ${backstock ? "#7C3AED" : "#E2E8F0"}`,
+            background: backstock ? "#F5F3FF" : "#FAFBFC" }}>
+            <input type="checkbox" checked={backstock} onChange={e => setBackstock(e.target.checked)}
+              style={{ width: 16, height: 16, accentColor: "#7C3AED", cursor: "pointer" }} />
+            <span style={{ fontSize: 13, fontWeight: backstock ? 600 : 400, color: backstock ? "#5B21B6" : "#475569" }}>
+              📦 Stock disponible en back-store
+            </span>
+          </label>
+        </div>
         <div style={{ marginBottom: 12 }}><label style={labelStyle}>Dernière visite</label>
           <input type="date" value={visite} onChange={e => setVisite(e.target.value)} style={inputStyle} /></div>
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: "1rem" }}>
@@ -367,7 +388,7 @@ function Modal({ open, onClose, onSave, initial, employees }) {
             border: "1px solid #E2E8F0", background: "#F8FAFC", color: "#475569", cursor: "pointer" }}>
             Annuler
           </button>
-          <button onClick={() => { if (!nom.trim()) return alert("Entre un nom."); onSave({ nom: nom.trim(), ville: ville.trim(), type, freq, stock, visite, employe }); }}
+          <button onClick={() => { if (!nom.trim()) return alert("Entre un nom."); onSave({ nom: nom.trim(), ville: ville.trim(), type, freq, backstock, visite, employe }); }}
             style={{ fontSize: 13, padding: "7px 16px", borderRadius: 8, border: "1px solid #2563EB",
               background: "#2563EB", color: "#fff", cursor: "pointer", fontWeight: 600 }}>
             Enregistrer
@@ -456,7 +477,7 @@ export default function App() {
     (filterEmploye === "all" || (filterEmploye === "none" ? !p.employe : p.employe === filterEmploye))
   );
 
-  const urgent = filtered.filter(p => getStatus(p) === "urgent").sort((a, b) => a.stock - b.stock);
+  const urgent = filtered.filter(p => getStatus(p) === "urgent").sort((a, b) => calcStock(a) - calcStock(b));
   const soon   = filtered.filter(p => getStatus(p) === "soon").sort((a, b) => joursAvant(a) - joursAvant(b));
   const ok     = filtered.filter(p => getStatus(p) === "ok").sort((a, b) => joursAvant(a) - joursAvant(b));
 
@@ -525,9 +546,9 @@ export default function App() {
 
   function exportCSV() {
     if (!pdvs.length) return alert("Aucun PDV.");
-    const headers = ["Nom","Ville","Bannière","Responsable","Fréquence (jours)","Stock (%)","Dernière visite","Prochaine visite","Statut"];
+    const headers = ["Nom","Ville","Bannière","Responsable","Fréquence (jours)","Stock estimé (%)","Backstock","Dernière visite","Prochaine visite","Statut"];
     const sl = { urgent: "À visiter", soon: "Bientôt vide", ok: "OK" };
-    const rows = pdvs.map(p => [`"${p.nom}"`,`"${p.ville}"`,`"${p.type}"`,`"${p.employe||""}"`,p.freq,p.stock,p.visite,prochaineVisite(p),sl[getStatus(p)]].join(","));
+    const rows = pdvs.map(p => [`"${p.nom}"`,`"${p.ville}"`,`"${p.type}"`,`"${p.employe||""}"`,p.freq,calcStock(p),p.backstock?"Oui":"Non",p.visite,prochaineVisite(p),sl[getStatus(p)]].join(","));
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
     const url = URL.createObjectURL(blob);
@@ -612,6 +633,7 @@ export default function App() {
           <option value="all">Toutes fréquences</option>
           <option value="7">Chaque semaine</option>
           <option value="14">Aux 2 semaines</option>
+          <option value="30">Mensuelle</option>
         </select>
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={selectStyle}>
           <option value="all">Tous statuts</option>
