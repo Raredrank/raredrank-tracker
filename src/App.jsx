@@ -71,6 +71,7 @@ function calcStock(p) {
   return Math.max(0, Math.min(100, Math.round(pct)));
 }
 function getStatus(p) {
+  if (p.force_urgent) return "urgent";
   const stock = calcStock(p);
   if (stock <= 20) return "urgent";
   if (stock <= 40) return "soon";
@@ -197,7 +198,7 @@ const TH = ({ children }) => (
   </th>
 );
 
-function PDVRow({ p, employees, onSuivi, onEdit, onDelete, busy }) {
+function PDVRow({ p, employees, onSuivi, onEdit, onDelete, onForce, busy }) {
   const [hover, setHover] = useState(false);
   return (
     <tr onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
@@ -206,9 +207,13 @@ function PDVRow({ p, employees, onSuivi, onEdit, onDelete, busy }) {
         <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nom}</span>
           {p.backstock && <span title="Stock disponible en back-store" style={{ fontSize: 12, flexShrink: 0 }}>📦</span>}
+          {p.force_urgent && <span title="Forcé manuellement dans À visiter maintenant" style={{ fontSize: 12, flexShrink: 0 }}>📌</span>}
         </span>
       </td>
-      <td style={{ padding: "9px 10px", fontSize: 12, color: "#64748B", whiteSpace: "nowrap" }}>{p.ville}</td>
+      <td style={{ padding: "9px 10px", fontSize: 12, color: "#64748B", whiteSpace: "nowrap" }}>
+        {p.ville}
+        {p.dernier_visiteur && <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>👤 {p.dernier_visiteur}</div>}
+      </td>
       <td style={{ padding: "9px 10px" }}><BannerBadge type={p.type} /></td>
       <td style={{ padding: "9px 10px" }}><FreqBadge freq={p.freq} /></td>
       <td style={{ padding: "9px 10px" }}><EmployeBadge name={p.employe} employees={employees} /></td>
@@ -216,6 +221,8 @@ function PDVRow({ p, employees, onSuivi, onEdit, onDelete, busy }) {
       <td style={{ padding: "9px 10px" }}><StatusChip p={p} /></td>
       <td style={{ padding: "9px 10px" }}>
         <div style={{ display: "flex", gap: 4 }}>
+          <IconBtn onClick={() => onForce(p.id, !p.force_urgent)} title={p.force_urgent ? "Retirer le forçage manuel" : "Forcer dans À visiter maintenant"}
+            color={p.force_urgent ? "#fff" : "#9A3412"} bg={p.force_urgent ? "#9A3412" : "#FFF7ED"} disabled={busy}>📌</IconBtn>
           <IconBtn onClick={() => onSuivi(p.id)} title="Visite faite — remet le stock à 100%" color="#1D4ED8" bg="#EFF6FF" disabled={busy}>✓</IconBtn>
           <IconBtn onClick={() => onEdit(p)} title="Modifier" color="#334155" bg="#F8FAFC" disabled={busy}>✎</IconBtn>
           <IconBtn onClick={() => onDelete(p.id)} title="Supprimer" color="#DC2626" bg="#FEF2F2" disabled={busy}>✕</IconBtn>
@@ -225,7 +232,7 @@ function PDVRow({ p, employees, onSuivi, onEdit, onDelete, busy }) {
   );
 }
 
-function Table({ pdvList, label, employees, onSuivi, onEdit, onDelete, busy }) {
+function Table({ pdvList, label, employees, onSuivi, onEdit, onDelete, onForce, busy }) {
   return (
     <div style={{ width: "100%", overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -240,10 +247,68 @@ function Table({ pdvList, label, employees, onSuivi, onEdit, onDelete, busy }) {
             ? <tr><td colSpan={8} style={{ textAlign: "center", padding: "1.5rem", color: "#94A3B8", fontSize: 13 }}>
                 Aucun PDV dans cette section
               </td></tr>
-            : pdvList.map(p => <PDVRow key={p.id} p={p} employees={employees} onSuivi={onSuivi} onEdit={onEdit} onDelete={onDelete} busy={busy} />)
+            : pdvList.map(p => <PDVRow key={p.id} p={p} employees={employees} onSuivi={onSuivi} onEdit={onEdit} onDelete={onDelete} onForce={onForce} busy={busy} />)
           }
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function VisitConfirmModal({ open, onClose, onConfirm, employees, pdvName }) {
+  const [selected, setSelected] = useState("");
+  const [customName, setCustomName] = useState("");
+  const [showCustom, setShowCustom] = useState(false);
+
+  useEffect(() => {
+    if (open) { setSelected(""); setCustomName(""); setShowCustom(false); }
+  }, [open]);
+
+  if (!open) return null;
+
+  const inputStyle = { width: "100%", fontSize: 13, padding: "7px 10px", borderRadius: 8,
+    border: "1px solid #E2E8F0", background: "#FAFBFC", color: "#0F172A", outline: "none" };
+
+  function handleSelectChange(e) {
+    const val = e.target.value;
+    if (val === "__other__") { setShowCustom(true); setSelected(""); }
+    else { setShowCustom(false); setSelected(val); }
+  }
+
+  const finalName = showCustom ? customName.trim() : selected;
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)",
+      zIndex: 250, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14,
+        border: "1px solid #E2E8F0", padding: "1.5rem", width: 340, maxWidth: "92vw",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.12)" }}>
+        <h2 style={{ fontSize: 15, fontWeight: 600, color: "#0F172A", marginBottom: 4 }}>Qui a fait la visite ?</h2>
+        <p style={{ fontSize: 12, color: "#64748B", marginBottom: "1rem" }}>{pdvName}</p>
+
+        <select value={showCustom ? "__other__" : selected} onChange={handleSelectChange} style={{ ...inputStyle, marginBottom: 10 }}>
+          <option value="">— Choisir —</option>
+          {employees.map(e => <option key={e} value={e}>{e}</option>)}
+          <option value="__other__">Autre...</option>
+        </select>
+
+        {showCustom && (
+          <input value={customName} onChange={e => setCustomName(e.target.value)}
+            placeholder="Nom de l'employé" autoFocus style={{ ...inputStyle, marginBottom: 10 }} />
+        )}
+
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: "0.5rem" }}>
+          <button onClick={onClose} style={{ fontSize: 13, padding: "7px 16px", borderRadius: 8,
+            border: "1px solid #E2E8F0", background: "#F8FAFC", color: "#475569", cursor: "pointer" }}>
+            Annuler
+          </button>
+          <button onClick={() => { if (!finalName) return alert("Choisis ou entre un nom."); onConfirm(finalName); }}
+            style={{ fontSize: 13, padding: "7px 16px", borderRadius: 8, border: "1px solid #2563EB",
+              background: "#2563EB", color: "#fff", cursor: "pointer", fontWeight: 600 }}>
+            Confirmer la visite
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -411,6 +476,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [empModalOpen, setEmpModalOpen] = useState(false);
+  const [visitTarget, setVisitTarget] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -481,15 +547,33 @@ export default function App() {
   const soon   = filtered.filter(p => getStatus(p) === "soon").sort((a, b) => joursAvant(a) - joursAvant(b));
   const ok     = filtered.filter(p => getStatus(p) === "ok").sort((a, b) => joursAvant(a) - joursAvant(b));
 
-  async function handleSuivi(id) {
+  function handleSuivi(id) {
+    const p = pdvs.find(x => x.id === id);
+    if (!p) return;
+    setVisitTarget(p);
+  }
+
+  async function confirmVisit(employeName) {
+    if (!visitTarget) return;
     setBusy(true);
     try {
-      await supaFetch(`pdvs?id=eq.${id}`, {
+      await supaFetch(`pdvs?id=eq.${visitTarget.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ visite: todayStr(), stock: 100 }),
+        body: JSON.stringify({ visite: todayStr(), stock: 100, force_urgent: false, dernier_visiteur: employeName }),
       });
+      showToast(`✓ ${visitTarget.nom} — visité par ${employeName}`);
+      setVisitTarget(null);
+      await loadAll();
+    } catch (err) { showToast(`Erreur: ${err.message}`); }
+    setBusy(false);
+  }
+
+  async function handleForce(id, value) {
+    setBusy(true);
+    try {
+      await supaFetch(`pdvs?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ force_urgent: value }) });
       const p = pdvs.find(x => x.id === id);
-      showToast(`✓ ${p?.nom} — stock remis à 100%`);
+      showToast(value ? `📌 ${p?.nom} forcé dans "À visiter maintenant"` : `📌 Forçage retiré sur ${p?.nom}`);
       await loadAll();
     } catch (err) { showToast(`Erreur: ${err.message}`); }
     setBusy(false);
@@ -649,18 +733,20 @@ export default function App() {
       </div>
 
       <SectionTitle icon="🔴" label="À visiter maintenant" count={urgent.length} color="#DC2626" />
-      <Table pdvList={urgent} label="Statut" employees={employees} onSuivi={handleSuivi} onEdit={handleEdit} onDelete={handleDelete} busy={busy} />
+      <Table pdvList={urgent} label="Statut" employees={employees} onSuivi={handleSuivi} onEdit={handleEdit} onDelete={handleDelete} onForce={handleForce} busy={busy} />
 
       <SectionTitle icon="🟡" label="À planifier cette semaine" count={soon.length} color="#D97706" />
-      <Table pdvList={soon} label="Dans" employees={employees} onSuivi={handleSuivi} onEdit={handleEdit} onDelete={handleDelete} busy={busy} />
+      <Table pdvList={soon} label="Dans" employees={employees} onSuivi={handleSuivi} onEdit={handleEdit} onDelete={handleDelete} onForce={handleForce} busy={busy} />
 
       <SectionTitle icon="🟢" label="Bien stockés" count={ok.length} color="#16A34A" />
-      <Table pdvList={ok} label="Prochaine visite" employees={employees} onSuivi={handleSuivi} onEdit={handleEdit} onDelete={handleDelete} busy={busy} />
+      <Table pdvList={ok} label="Prochaine visite" employees={employees} onSuivi={handleSuivi} onEdit={handleEdit} onDelete={handleDelete} onForce={handleForce} busy={busy} />
 
       <Modal open={modalOpen} onClose={() => { setModalOpen(false); setEditTarget(null); }}
         onSave={handleSave} initial={editTarget} employees={employees} />
       <EmployeesModal open={empModalOpen} onClose={() => setEmpModalOpen(false)}
         employees={employees} onSave={handleSaveEmployees} />
+      <VisitConfirmModal open={!!visitTarget} onClose={() => setVisitTarget(null)}
+        onConfirm={confirmVisit} employees={employees} pdvName={visitTarget?.nom || ""} />
 
       {toast && (
         <div style={{ position:"fixed", bottom:"1.25rem", right:"1.25rem", background:"#0F172A",
