@@ -25,7 +25,8 @@ async function supaFetch(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
-const TODAY = new Date("2026-06-15");
+const TODAY = new Date();
+TODAY.setHours(0, 0, 0, 0);
 
 const SEED_PDVS = [
   {nom:"IGA Varennes",ville:"Varennes",type:"IGA",freq:7,stock:50,visite:"2026-06-15",employe:""},
@@ -54,6 +55,10 @@ const SEED_PDVS = [
 const SEED_EMPLOYEES = ["Logan", "David", "Louis-Gabriel"];
 
 function joursDepuis(d) { return Math.floor((TODAY - new Date(d)) / 86400000); }
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().split("T")[0];
+}
 function joursAvant(p)  { return Math.max(0, p.freq - joursDepuis(p.visite)); }
 function prochaineVisite(p) {
   const r = new Date(p.visite);
@@ -295,7 +300,7 @@ function Modal({ open, onClose, onSave, initial, employees }) {
   const [type, setType] = useState("IGA");
   const [freq, setFreq] = useState(7);
   const [stock, setStock] = useState(50);
-  const [visite, setVisite] = useState("2026-06-15");
+  const [visite, setVisite] = useState(todayStr());
   const [employe, setEmploye] = useState("");
 
   useEffect(() => {
@@ -305,7 +310,7 @@ function Modal({ open, onClose, onSave, initial, employees }) {
       setType(initial?.type || "IGA");
       setFreq(initial?.freq || 7);
       setStock(initial?.stock ?? 50);
-      setVisite(initial?.visite || "2026-06-15");
+      setVisite(initial?.visite || todayStr());
       setEmploye(initial?.employe || "");
     }
   }, [open, initial]);
@@ -460,7 +465,7 @@ export default function App() {
     try {
       await supaFetch(`pdvs?id=eq.${id}`, {
         method: "PATCH",
-        body: JSON.stringify({ visite: "2026-06-15", stock: 100 }),
+        body: JSON.stringify({ visite: todayStr(), stock: 100 }),
       });
       const p = pdvs.find(x => x.id === id);
       showToast(`✓ ${p?.nom} — stock remis à 100%`);
