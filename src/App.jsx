@@ -182,11 +182,11 @@ function IconBtn({ onClick, title, color, bg, children, disabled }) {
 function SectionTitle({ icon, label, count, color }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "20px 0 8px",
-      paddingBottom: 6, borderBottom: "1px solid #F1F5F9" }}>
+      paddingBottom: 8, borderBottom: "2px solid #EDE9FE" }}>
       <span style={{ fontSize: 14 }}>{icon}</span>
-      <span style={{ fontSize: 12, fontWeight: 600, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</span>
-      <span style={{ fontSize: 11, padding: "1px 7px", borderRadius: 999, background: color + "22",
-        color: color, fontWeight: 700, marginLeft: 2 }}>{count}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color: "#4C1D95", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+      <span style={{ fontSize: 11, padding: "1px 8px", borderRadius: 999, background: color + "22",
+        color: color, fontWeight: 800, marginLeft: 2, border: `1px solid ${color}44` }}>{count}</span>
     </div>
   );
 }
@@ -878,42 +878,65 @@ function MainApp() {
   );
 
   return (
-    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", padding: "1.25rem 1rem", maxWidth: 1200, margin: "0 auto" }}>
+    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background:"#F5F3FF", minHeight:"100vh" }}>
 
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"1.25rem", flexWrap:"wrap", gap:8 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <span style={{ fontSize:20 }}>🥤</span>
-          <span style={{ fontSize:17, fontWeight:700, color:"#0F172A" }}>RareDrank — Suivi PDV</span>
-        </div>
-        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-          <span style={{ fontSize:11, color: busy ? "#D97706" : "#16A34A", display:"flex", alignItems:"center", gap:4 }}>
-            <span style={{ width:6, height:6, borderRadius:"50%", background: busy ? "#D97706" : "#16A34A", display:"inline-block" }}></span>
-            {busy ? "Sauvegarde..." : connStatus}
-          </span>
-          <button onClick={() => setEmpModalOpen(true)} style={{ fontSize:13, padding:"6px 14px", borderRadius:8,
-            border:"1px solid #7C3AED", background:"#F5F3FF", color:"#5B21B6",
-            cursor:"pointer", fontWeight:600, display:"flex", alignItems:"center", gap:6 }}>
-            👥 Employés
-          </button>
-          <button onClick={exportCSV} style={{ fontSize:13, padding:"6px 14px", borderRadius:8,
-            border:"1px solid #059669", background:"#059669", color:"#fff",
-            cursor:"pointer", fontWeight:600, display:"flex", alignItems:"center", gap:6 }}>
-            ↓ Exporter CSV
-          </button>
+      {/* ── HEADER RAREDRANK ── */}
+      <div style={{ background:"linear-gradient(135deg, #1A0A2E 0%, #2D1B5E 60%, #4C1D95 100%)",
+        padding:"1rem 1.25rem", marginBottom:"1rem",
+        boxShadow:"0 4px 24px rgba(124,58,237,0.25)" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
+
+          {/* Logo */}
+          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+            <div style={{ width:38, height:38, borderRadius:10, background:"rgba(167,139,250,0.15)",
+              border:"1px solid rgba(167,139,250,0.35)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20 }}>
+              🥤
+            </div>
+            <div>
+              <div style={{ fontSize:18, fontWeight:900, color:"#fff", letterSpacing:"-0.01em", lineHeight:1 }}>
+                RARE<span style={{ color:"#A78BFA" }}>DRANK</span>
+              </div>
+              <div style={{ fontSize:10, color:"#7C5FA8", letterSpacing:"0.15em", textTransform:"uppercase", marginTop:2 }}>
+                Suivi Points de Vente
+              </div>
+            </div>
+          </div>
+
+          {/* Boutons + statut */}
+          <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+            <span style={{ fontSize:11, color: busy ? "#FCD34D" : "#86EFAC", display:"flex", alignItems:"center", gap:4 }}>
+              <span style={{ width:6, height:6, borderRadius:"50%", background: busy ? "#FCD34D" : "#86EFAC", display:"inline-block",
+                boxShadow: busy ? "0 0 6px #FCD34D" : "0 0 6px #86EFAC" }}></span>
+              {busy ? "Sauvegarde..." : connStatus}
+            </span>
+            <button onClick={() => setEmpModalOpen(true)} style={{ fontSize:12, padding:"6px 14px", borderRadius:8,
+              border:"1px solid rgba(167,139,250,0.4)", background:"rgba(167,139,250,0.12)", color:"#DDD6FE",
+              cursor:"pointer", fontWeight:600, display:"flex", alignItems:"center", gap:6 }}>
+              👥 Employés
+            </button>
+            <button onClick={exportCSV} style={{ fontSize:12, padding:"6px 14px", borderRadius:8,
+              border:"1px solid rgba(167,139,250,0.4)", background:"rgba(167,139,250,0.12)", color:"#DDD6FE",
+              cursor:"pointer", fontWeight:600, display:"flex", alignItems:"center", gap:6 }}>
+              ↓ CSV
+            </button>
+          </div>
         </div>
       </div>
 
+      <div style={{ maxWidth:1200, margin:"0 auto", padding:"0 1rem 1.5rem" }}>
+
+      {/* Stat cards */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(110px, 1fr))", gap:8, marginBottom:"1.25rem" }}>
         {[
-          { label:"Total PDV",     value:pdvs.length,                                         color:"#0F172A" },
-          { label:"À visiter",     value:pdvs.filter(p=>getStatus(p)==="urgent").length,       color:"#DC2626" },
-          { label:"Cette semaine", value:pdvs.filter(p=>getStatus(p)==="soon").length,         color:"#D97706" },
-          { label:"OK",            value:pdvs.filter(p=>getStatus(p)==="ok").length,           color:"#16A34A" },
-          { label:"Non assignés",  value:pdvs.filter(p=>!p.employe).length,                   color:"#64748B" },
+          { label:"Total PDV",     value:pdvs.length,                                         color:"#7C3AED", bg:"#EDE9FE", border:"#DDD6FE" },
+          { label:"À visiter",     value:pdvs.filter(p=>getStatus(p)==="urgent").length,       color:"#DC2626", bg:"#FEF2F2", border:"#FECACA" },
+          { label:"Cette semaine", value:pdvs.filter(p=>getStatus(p)==="soon").length,         color:"#D97706", bg:"#FFFBEB", border:"#FDE68A" },
+          { label:"OK",            value:pdvs.filter(p=>getStatus(p)==="ok").length,           color:"#16A34A", bg:"#F0FDF4", border:"#BBF7D0" },
+          { label:"Non assignés",  value:pdvs.filter(p=>!p.employe).length,                   color:"#6B21A8", bg:"#F5F3FF", border:"#E9D5FF" },
         ].map(s => (
-          <div key={s.label} style={{ background:"#F8FAFC", borderRadius:10, padding:"10px 14px", border:"1px solid #F1F5F9" }}>
-            <div style={{ fontSize:11, color:"#94A3B8", marginBottom:4 }}>{s.label}</div>
-            <div style={{ fontSize:20, fontWeight:700, color:s.color }}>{s.value}</div>
+          <div key={s.label} style={{ background:s.bg, borderRadius:10, padding:"10px 14px", border:`1px solid ${s.border}` }}>
+            <div style={{ fontSize:11, color:"#6B7280", marginBottom:4 }}>{s.label}</div>
+            <div style={{ fontSize:20, fontWeight:800, color:s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -921,27 +944,30 @@ function MainApp() {
       <div style={{ display:"flex", gap:8, marginBottom:"1rem", flexWrap:"wrap" }}>
         <input type="text" value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Chercher PDV, ville, employé..."
-          style={{ flex:1, minWidth:160, ...selectStyle, cursor:"text" }} />
-        <select value={filterEmploye} onChange={e => setFilterEmploye(e.target.value)} style={{ ...selectStyle, flex:"1 1 140px" }}>
+          style={{ flex:1, minWidth:160, ...selectStyle, cursor:"text",
+            border:"1px solid #DDD6FE", background:"#fff" }} />
+        <select value={filterEmploye} onChange={e => setFilterEmploye(e.target.value)} style={{ ...selectStyle, flex:"1 1 140px", border:"1px solid #DDD6FE" }}>
           <option value="all">Tous les responsables</option>
           <option value="none">— Non assignés</option>
           {employees.map(e => <option key={e} value={e}>{e}</option>)}
         </select>
-        <select value={filterFreq} onChange={e => setFilterFreq(e.target.value)} style={{ ...selectStyle, flex:"1 1 140px" }}>
+        <select value={filterFreq} onChange={e => setFilterFreq(e.target.value)} style={{ ...selectStyle, flex:"1 1 140px", border:"1px solid #DDD6FE" }}>
           <option value="all">Toutes fréquences</option>
           <option value="7">Chaque semaine</option>
           <option value="14">Aux 2 semaines</option>
           <option value="30">Mensuelle</option>
         </select>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ ...selectStyle, flex:"1 1 140px" }}>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ ...selectStyle, flex:"1 1 140px", border:"1px solid #DDD6FE" }}>
           <option value="all">Tous statuts</option>
           <option value="urgent">À visiter</option>
           <option value="soon">Cette semaine</option>
           <option value="ok">OK</option>
         </select>
         <button onClick={handleAdd} disabled={busy} style={{ fontSize:13, padding:"5px 14px", borderRadius:8,
-          border:"1px solid #2563EB", background:"#2563EB", color:"#fff", flex:"1 1 100%",
-          cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.6 : 1, fontWeight:600, height:38, display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
+          border:"1px solid #7C3AED", background:"linear-gradient(135deg,#7C3AED,#5B21B6)", color:"#fff", flex:"1 1 100%",
+          cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.6 : 1, fontWeight:700, height:38,
+          display:"flex", alignItems:"center", justifyContent:"center", gap:5,
+          boxShadow:"0 2px 8px rgba(124,58,237,0.3)" }}>
           + Ajouter PDV
         </button>
       </div>
@@ -963,12 +989,15 @@ function MainApp() {
         onConfirm={confirmVisit} employees={employees} pdvName={visitTarget?.nom || ""} />
 
       {toast && (
-        <div style={{ position:"fixed", bottom:"1.25rem", right:"1.25rem", background:"#0F172A",
-          color:"#fff", padding:"10px 16px", borderRadius:10, fontSize:13, fontWeight:500,
-          zIndex:400, boxShadow:"0 8px 24px rgba(0,0,0,0.18)", pointerEvents:"none" }}>
+        <div style={{ position:"fixed", bottom:"1.25rem", right:"1.25rem",
+          background:"linear-gradient(135deg,#2D1B5E,#1A0A2E)",
+          color:"#DDD6FE", padding:"10px 16px", borderRadius:10, fontSize:13, fontWeight:500,
+          zIndex:400, boxShadow:"0 8px 24px rgba(124,58,237,0.35)",
+          border:"1px solid rgba(167,139,250,0.3)", pointerEvents:"none" }}>
           {toast}
         </div>
       )}
+      </div>
     </div>
   );
 }
