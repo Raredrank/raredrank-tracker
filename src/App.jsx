@@ -542,113 +542,130 @@ function Modal({ open, onClose, onSave, initial, employees }) {
 }
 
 // ============================================================
-// CODE D'ACCÈS — change "RAREDRANK2026" pour ce que tu veux
+// CODE D'ACCÈS — PIN 4 chiffres
 // ============================================================
-const ACCESS_CODE = "RAREDRANK2026";
+const ACCESS_CODE = "2018";
 const SESSION_KEY = "raredrank-auth";
 
 function LoginScreen({ onSuccess }) {
-  const [code, setCode] = useState("");
+  const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
   const [shake, setShake] = useState(false);
 
-  function tryLogin() {
-    if (code.trim().toUpperCase() === ACCESS_CODE) {
-      sessionStorage.setItem(SESSION_KEY, "1");
-      onSuccess();
-    } else {
-      setError(true);
-      setShake(true);
-      setCode("");
-      setTimeout(() => setShake(false), 500);
+  function pressDigit(d) {
+    if (pin.length >= 4) return;
+    const next = pin + d;
+    setPin(next);
+    setError(false);
+    if (next.length === 4) {
+      setTimeout(() => {
+        if (next === ACCESS_CODE) {
+          sessionStorage.setItem(SESSION_KEY, "1");
+          onSuccess();
+        } else {
+          setError(true);
+          setShake(true);
+          setTimeout(() => { setPin(""); setShake(false); }, 600);
+        }
+      }, 120);
     }
   }
 
+  function pressDelete() {
+    setPin(p => p.slice(0, -1));
+    setError(false);
+  }
+
+  const KEYS = [
+    ["1","2","3"],
+    ["4","5","6"],
+    ["7","8","9"],
+    [null,"0","del"],
+  ];
+
   return (
-    <div style={{ minHeight: "100vh", background: "#0A0A0A", display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center", padding: "2rem", position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: "#0D0B14", display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center", padding: "2rem",
+      position: "relative", overflow: "hidden", userSelect: "none" }}>
 
-      {/* Cercles décoratifs fond */}
-      <div style={{ position: "absolute", top: -120, right: -120, width: 350, height: 350,
-        borderRadius: "50%", background: "radial-gradient(circle, #FF2D55 0%, transparent 70%)", opacity: 0.15 }} />
-      <div style={{ position: "absolute", bottom: -80, left: -80, width: 280, height: 280,
-        borderRadius: "50%", background: "radial-gradient(circle, #00D4FF 0%, transparent 70%)", opacity: 0.12 }} />
+      {/* Cercles décoratifs mauve */}
+      <div style={{ position: "absolute", top: -140, right: -140, width: 400, height: 400,
+        borderRadius: "50%", background: "radial-gradient(circle, #7C3AED 0%, transparent 70%)", opacity: 0.2 }} />
+      <div style={{ position: "absolute", bottom: -100, left: -100, width: 320, height: 320,
+        borderRadius: "50%", background: "radial-gradient(circle, #A855F7 0%, transparent 70%)", opacity: 0.15 }} />
 
-      {/* Logo + branding */}
-      <div style={{ textAlign: "center", marginBottom: "2.5rem", zIndex: 1 }}>
-        <div style={{ fontSize: 56, marginBottom: 12 }}>🥤</div>
-        <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em",
-          fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 }}>
-          RARE<span style={{ color: "#FF2D55" }}>DRANK</span>
+      {/* Logo */}
+      <div style={{ textAlign: "center", marginBottom: "2rem", zIndex: 1 }}>
+        <div style={{ fontSize: 52, marginBottom: 10, filter: "drop-shadow(0 0 24px rgba(167,139,250,0.5))" }}>🥤</div>
+        <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1 }}>
+          RARE<span style={{ color: "#A78BFA" }}>DRANK</span>
         </div>
-        <div style={{ fontSize: 12, color: "#666", marginTop: 6, letterSpacing: "0.18em",
-          textTransform: "uppercase", fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <div style={{ fontSize: 10, color: "#4B4566", marginTop: 7, letterSpacing: "0.2em", textTransform: "uppercase" }}>
           Exotic Sodas & Snacks Distribution
         </div>
-        <div style={{ fontSize: 12, color: "#444", marginTop: 4, letterSpacing: "0.1em",
-          fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <div style={{ fontSize: 11, color: "#7C5FA8", marginTop: 5, letterSpacing: "0.06em" }}>
           @raredrank_co
         </div>
       </div>
 
-      {/* Carte de login */}
-      <div style={{ width: "100%", maxWidth: 340, zIndex: 1,
-        animation: shake ? "shake 0.4s ease" : "none" }}>
-        <style>{`
-          @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-10px); }
-            40% { transform: translateX(10px); }
-            60% { transform: translateX(-8px); }
-            80% { transform: translateX(8px); }
-          }
-        `}</style>
+      <style>{`
+        @keyframes shake {
+          0%,100%{transform:translateX(0)}
+          20%{transform:translateX(-12px)}
+          40%{transform:translateX(12px)}
+          60%{transform:translateX(-8px)}
+          80%{transform:translateX(8px)}
+        }
+        .shake { animation: shake 0.5s ease; }
+        .numkey { transition: transform 0.08s, background 0.1s; }
+        .numkey:active { transform: scale(0.92); background: #2D2050 !important; }
+      `}</style>
 
-        <div style={{ background: "#141414", border: "1px solid #222", borderRadius: 16,
-          padding: "1.75rem", boxShadow: "0 25px 60px rgba(0,0,0,0.5)" }}>
-
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#888", textTransform: "uppercase",
-            letterSpacing: "0.12em", marginBottom: "1.25rem", textAlign: "center",
-            fontFamily: "'Inter', system-ui, sans-serif" }}>
-            Accès équipe
-          </div>
-
-          <input
-            type="password"
-            value={code}
-            onChange={e => { setCode(e.target.value); setError(false); }}
-            onKeyDown={e => e.key === "Enter" && tryLogin()}
-            placeholder="Code d'accès"
-            autoComplete="off"
-            style={{ width: "100%", fontSize: 18, padding: "12px 16px", borderRadius: 10,
-              border: `1.5px solid ${error ? "#FF2D55" : "#2A2A2A"}`,
-              background: "#0D0D0D", color: "#fff", outline: "none", textAlign: "center",
-              letterSpacing: "0.2em", fontFamily: "'Inter', system-ui, sans-serif",
-              transition: "border-color 0.2s", marginBottom: error ? 8 : 16 }}
-          />
-
-          {error && (
-            <div style={{ fontSize: 12, color: "#FF2D55", textAlign: "center", marginBottom: 12,
-              fontFamily: "'Inter', system-ui, sans-serif" }}>
-              Code incorrect — réessaie 🚫
-            </div>
-          )}
-
-          <button onClick={tryLogin} style={{ width: "100%", padding: "13px", borderRadius: 10,
-            border: "none", background: "linear-gradient(135deg, #FF2D55 0%, #FF6B35 100%)",
-            color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer",
-            letterSpacing: "0.05em", fontFamily: "'Inter', system-ui, sans-serif",
-            transition: "opacity 0.2s", boxShadow: "0 4px 20px rgba(255,45,85,0.4)" }}
-            onMouseEnter={e => e.target.style.opacity = "0.88"}
-            onMouseLeave={e => e.target.style.opacity = "1"}>
-            ENTRER
-          </button>
-        </div>
+      {/* Indicateurs de points */}
+      <div className={shake ? "shake" : ""}
+        style={{ display: "flex", gap: 16, marginBottom: "2rem", zIndex: 1 }}>
+        {[0,1,2,3].map(i => (
+          <div key={i} style={{ width: 14, height: 14, borderRadius: "50%",
+            background: pin.length > i ? "#A78BFA" : "#1E1830",
+            border: `2px solid ${error ? "#EF4444" : pin.length > i ? "#7C3AED" : "#2D2A4A"}`,
+            transition: "all 0.15s",
+            boxShadow: pin.length > i ? "0 0 10px rgba(167,139,250,0.6)" : "none" }} />
+        ))}
       </div>
 
-      {/* Footer */}
-      <div style={{ position: "absolute", bottom: "1.5rem", fontSize: 11, color: "#333",
-        textAlign: "center", fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: "0.05em" }}>
+      {error && (
+        <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 16, zIndex: 1,
+          display: "flex", alignItems: "center", gap: 5 }}>
+          🚫 PIN incorrect
+        </div>
+      )}
+
+      {/* Clavier numérique */}
+      <div style={{ zIndex: 1 }}>
+        {KEYS.map((row, ri) => (
+          <div key={ri} style={{ display: "flex", gap: 20, justifyContent: "center", marginBottom: 16 }}>
+            {row.map((k, ki) => {
+              if (k === null) return <div key={ki} style={{ width: 72, height: 72 }} />;
+              const isDel = k === "del";
+              return (
+                <button key={ki} className="numkey"
+                  onClick={() => isDel ? pressDelete() : pressDigit(k)}
+                  style={{ width: 72, height: 72, borderRadius: "50%", border: "none",
+                    background: isDel ? "transparent" : "#1A1530",
+                    color: isDel ? "#7C5FA8" : "#fff",
+                    fontSize: isDel ? 22 : 26, fontWeight: isDel ? 400 : 600,
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: isDel ? "none" : "0 2px 8px rgba(0,0,0,0.4)" }}>
+                  {isDel ? "⌫" : k}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ position: "absolute", bottom: "1.5rem", fontSize: 11, color: "#1E1830",
+        textAlign: "center", letterSpacing: "0.06em" }}>
         RareDrank Inc. — La Prairie, Québec 🇨🇦
       </div>
     </div>
@@ -657,9 +674,7 @@ function LoginScreen({ onSuccess }) {
 
 export default function App() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem(SESSION_KEY) === "1");
-
   if (!authed) return <LoginScreen onSuccess={() => setAuthed(true)} />;
-
   return <MainApp />;
 }
 
