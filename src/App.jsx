@@ -541,7 +541,129 @@ function Modal({ open, onClose, onSave, initial, employees }) {
   );
 }
 
+// ============================================================
+// CODE D'ACCÈS — change "RAREDRANK2026" pour ce que tu veux
+// ============================================================
+const ACCESS_CODE = "RAREDRANK2026";
+const SESSION_KEY = "raredrank-auth";
+
+function LoginScreen({ onSuccess }) {
+  const [code, setCode] = useState("");
+  const [error, setError] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  function tryLogin() {
+    if (code.trim().toUpperCase() === ACCESS_CODE) {
+      sessionStorage.setItem(SESSION_KEY, "1");
+      onSuccess();
+    } else {
+      setError(true);
+      setShake(true);
+      setCode("");
+      setTimeout(() => setShake(false), 500);
+    }
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0A0A0A", display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center", padding: "2rem", position: "relative", overflow: "hidden" }}>
+
+      {/* Cercles décoratifs fond */}
+      <div style={{ position: "absolute", top: -120, right: -120, width: 350, height: 350,
+        borderRadius: "50%", background: "radial-gradient(circle, #FF2D55 0%, transparent 70%)", opacity: 0.15 }} />
+      <div style={{ position: "absolute", bottom: -80, left: -80, width: 280, height: 280,
+        borderRadius: "50%", background: "radial-gradient(circle, #00D4FF 0%, transparent 70%)", opacity: 0.12 }} />
+
+      {/* Logo + branding */}
+      <div style={{ textAlign: "center", marginBottom: "2.5rem", zIndex: 1 }}>
+        <div style={{ fontSize: 56, marginBottom: 12 }}>🥤</div>
+        <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em",
+          fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 }}>
+          RARE<span style={{ color: "#FF2D55" }}>DRANK</span>
+        </div>
+        <div style={{ fontSize: 12, color: "#666", marginTop: 6, letterSpacing: "0.18em",
+          textTransform: "uppercase", fontFamily: "'Inter', system-ui, sans-serif" }}>
+          Exotic Sodas & Snacks Distribution
+        </div>
+        <div style={{ fontSize: 12, color: "#444", marginTop: 4, letterSpacing: "0.1em",
+          fontFamily: "'Inter', system-ui, sans-serif" }}>
+          @raredrank_co
+        </div>
+      </div>
+
+      {/* Carte de login */}
+      <div style={{ width: "100%", maxWidth: 340, zIndex: 1,
+        animation: shake ? "shake 0.4s ease" : "none" }}>
+        <style>{`
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+          }
+        `}</style>
+
+        <div style={{ background: "#141414", border: "1px solid #222", borderRadius: 16,
+          padding: "1.75rem", boxShadow: "0 25px 60px rgba(0,0,0,0.5)" }}>
+
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#888", textTransform: "uppercase",
+            letterSpacing: "0.12em", marginBottom: "1.25rem", textAlign: "center",
+            fontFamily: "'Inter', system-ui, sans-serif" }}>
+            Accès équipe
+          </div>
+
+          <input
+            type="password"
+            value={code}
+            onChange={e => { setCode(e.target.value); setError(false); }}
+            onKeyDown={e => e.key === "Enter" && tryLogin()}
+            placeholder="Code d'accès"
+            autoComplete="off"
+            style={{ width: "100%", fontSize: 18, padding: "12px 16px", borderRadius: 10,
+              border: `1.5px solid ${error ? "#FF2D55" : "#2A2A2A"}`,
+              background: "#0D0D0D", color: "#fff", outline: "none", textAlign: "center",
+              letterSpacing: "0.2em", fontFamily: "'Inter', system-ui, sans-serif",
+              transition: "border-color 0.2s", marginBottom: error ? 8 : 16 }}
+          />
+
+          {error && (
+            <div style={{ fontSize: 12, color: "#FF2D55", textAlign: "center", marginBottom: 12,
+              fontFamily: "'Inter', system-ui, sans-serif" }}>
+              Code incorrect — réessaie 🚫
+            </div>
+          )}
+
+          <button onClick={tryLogin} style={{ width: "100%", padding: "13px", borderRadius: 10,
+            border: "none", background: "linear-gradient(135deg, #FF2D55 0%, #FF6B35 100%)",
+            color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer",
+            letterSpacing: "0.05em", fontFamily: "'Inter', system-ui, sans-serif",
+            transition: "opacity 0.2s", boxShadow: "0 4px 20px rgba(255,45,85,0.4)" }}
+            onMouseEnter={e => e.target.style.opacity = "0.88"}
+            onMouseLeave={e => e.target.style.opacity = "1"}>
+            ENTRER
+          </button>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ position: "absolute", bottom: "1.5rem", fontSize: 11, color: "#333",
+        textAlign: "center", fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: "0.05em" }}>
+        RareDrank Inc. — La Prairie, Québec 🇨🇦
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem(SESSION_KEY) === "1");
+
+  if (!authed) return <LoginScreen onSuccess={() => setAuthed(true)} />;
+
+  return <MainApp />;
+}
+
+function MainApp() {
   const [pdvs, setPdvs] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState("");
